@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 bot = telebot.TeleBot("5380240127:AAGJyoEeO7VxpC4W5u7Kb2EffObaBwo8o8Q")
 
-# Функция, обрабатывающая команду /start
+# Start function
 @bot.message_handler(commands=["start"])
 def start(m, res=False):
     bot.send_message(m.chat.id, 'Я на связи. Что хочется поесть? ')
@@ -15,16 +15,13 @@ def start(m, res=False):
     keyboard.add(button_geo)
     bot.send_message(m.chat.id,"Поделись своим гео!",reply_markup=keyboard)
 
-# Получение сообщений от юзера
+# Getinng location
 @bot.message_handler(content_types=["location"])
-
-
-
 def location(message):
     if message.location is not None:
         #Getting current position from user
         current_pos = (message.location.latitude, message.location.longitude)
-        print(current_pos)
+        
         url = f"https://api.foursquare.com/v3/places/nearby?fields=fsq_id%2Ccategories&ll={current_pos[0]}%2C{current_pos[1]}&limit=25"
         headers = {
         "Accept": "application/json",
@@ -33,20 +30,17 @@ def location(message):
         response = requests.get(url, headers=headers)
         data = json.loads(response.text)
         data = data.get('results')
-        print(data)
+
         #Sorting data about places which are close to the current position
         sortedides = []
         for item in data:
             for category in item['categories']:
                 if category['id'] in range(13000,14000):
                     sortedides.append(item)
-        #For test printing the list which is sorted by only dining and drinking category(id between 13000 and 14000)
-        print(sortedides)
-        #For test(printing only fsq_id)
         mess = []
         for item in sortedides:
                 mess.append(item['fsq_id'])
-        
+        #Parcing the sites for info
         info =[]
         for i in mess:
             newurl = f'https://ru.foursquare.com/v/{i}'
@@ -75,18 +69,9 @@ def location(message):
             except AttributeError:
                 rating = 'Нет оценок'
                 pass
-            
+            #sending message to user about places
             info = [name,type,time_till_close,phonenumber,adress_route,rating]
             bot.send_message(message.chat.id,"\n\n".join(info),parse_mode="Markdown")
-            
-            
-
-
-            
-
-      
-        #Working(sending fsq id by  one message per fsq_id)
-       
     
 
 bot.polling(none_stop = True)
